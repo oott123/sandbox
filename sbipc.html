@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>State-of-art BYOD IPC</title>
+  </head>
+  <body>
+    <button id="aaa">Test</button>
+  </body>
+  <script>
+    document.getElementById('aaa').addEventListener('click', () => {
+      navigator.mediaDevices.getUserMedia({ audio: { sampleRate: 8000, sampleSize: 16 } })
+      .then(stream => {
+        const ac = new AudioContext({
+          sampleRate: 8000,
+          latencyHint: "interactive",
+        })
+        const source = ac.createMediaStreamSource(stream)
+        const dest = ac.createMediaStreamDestination()
+        source.connect(dest)
+
+        const trackProcessor = new MediaStreamTrackProcessor({
+          track: dest.stream.getAudioTracks()[0],
+        })
+        trackProcessor.readable.pipeTo(new WritableStream({
+          write: (audioData) => {
+            console.log(audioData)
+            alert('yes!')
+            ac.close()
+            // audioData.close()
+          }
+        }))
+      })
+      .catch(console.error)
+    })
+  </script>
+</html>
